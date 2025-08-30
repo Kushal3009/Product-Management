@@ -7,6 +7,7 @@ import helmet from "helmet";
 import cors from "cors";
 import { connectDB } from "./config/dbLodder.js";
 import product from './routes/products.routes.js'
+import cart from './routes/cart.routes.js'
 
 
 dotenv.config();
@@ -24,7 +25,8 @@ app.use(cors());
 app.use(morganMiddleware);
 
 // routes
-app.use('/api/v1/products', product)
+app.use('/api/v1/products', product);
+app.use('/api/v1/cart', cart);
 
 // Example route
 app.get("/", (req, res) => {
