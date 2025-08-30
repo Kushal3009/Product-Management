@@ -4,7 +4,7 @@ import Product from "../models/product.model.js";
 import ProductImage from "../models/productImage.model.js";
 import { ApiError } from "../utilities/ApiError.js";
 
-export const addProductToCart = async (userId, productId) => {
+export const addProductToCart = async (userId, productId, transaction) => {
     try {
         if (!userId || !productId) {
             logger.error("User ID or Product ID is missing");
@@ -14,6 +14,7 @@ export const addProductToCart = async (userId, productId) => {
         // Check if already in cart
         const existingItem = await Cart.findOne({
             where: { user_id: userId, product_id: productId },
+            transaction
         });
 
         if (existingItem) {
@@ -22,7 +23,7 @@ export const addProductToCart = async (userId, productId) => {
         }
 
         // Add product to cart
-        await Cart.create({ product_id: productId, user_id: userId });
+        await Cart.create({ product_id: productId, user_id: userId }, { transaction });
         logger.info(`Product ${productId} added to cart for user ${userId}`);
     } catch (error) {
         logger.error(`Error at addProductToCart: ${error.message}`);
@@ -65,7 +66,7 @@ export const getUserCart = async (userId) => {
 };
 
 
-export const removeProductFromCart = async (userId, cartId) => {
+export const removeProductFromCart = async (userId, cartId, transaction) => {
     try {
         if (!userId || !cartId) {
             logger.error("User ID or Product ID is missing");
@@ -73,7 +74,7 @@ export const removeProductFromCart = async (userId, cartId) => {
         }
 
         const existingItem = await Cart.findOne({
-            where: { user_id: userId, id: cartId },
+            where: { user_id: userId, id: cartId }, transaction
         });
 
         if (!existingItem) {
@@ -81,7 +82,7 @@ export const removeProductFromCart = async (userId, cartId) => {
             throw new ApiError(404, "Product not found in cart");
         }
 
-        await existingItem.destroy();
+        await existingItem.destroy({ transaction });
         logger.info(`Product ${cartId} removed from cart for user ${userId}`);
     } catch (error) {
         logger.error(`Error at removeProductFromCart: ${error.message}`);

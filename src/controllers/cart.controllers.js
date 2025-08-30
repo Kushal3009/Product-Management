@@ -1,18 +1,22 @@
+import { sequelize } from "../config/dbConnection.js";
 import logger from "../logger/logger.js"
 import { addProductToCart, removeProductFromCart } from "../services/cart.services.js";
 import { ApiResponse } from "../utilities/ApiResponse.js"
 
 export const addToCart = async (req, res, next) => {
+    const transaction = sequelize.transaction();
     try {
         const { productId } = req.body;
         const { id: userId } = req.user;
 
         // Logic to add the product to the user's cart
         logger.info(`Adding product ${productId} to cart for user ${userId}`);
-        await addProductToCart(userId, productId);
+        await addProductToCart(userId, productId, transaction);
 
+        await transaction.commit();
         return res.status(200).json(new ApiResponse(200, "Product added to cart successfully"));
     } catch (error) {
+        await transaction.rollback();
         logger.error(`Error at addToCart: ${error.message}`);
         next(error);
     }
@@ -41,16 +45,19 @@ export const getCartData = async (req, res, next) => {
 
 
 export const removeFromCart = async (req, res, next) => {
+    const transaction = sequelize.transaction();
     try {
         const { cartId } = req.query;
         const { id: userId } = req.user;
 
         // Logic to remove the product from the user's cart
         logger.info(`Removing product ${cartId} from cart for user ${userId}`);
-        await removeProductFromCart(userId, cartId); // Assume this function is defined elsewhere
+        await removeProductFromCart(userId, cartId, transaction); // Assume this function is defined elsewhere
 
+        await transaction.commit();
         return res.status(200).json(new ApiResponse(200, "Product removed from cart successfully"));
     } catch (error) {
+        await transaction.rollback();
         logger.error(`Error at removeFromCart: ${error.message}`);
         next(error);
     }
